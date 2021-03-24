@@ -31,12 +31,27 @@ var elements=[];
 // Currently clicked object list
 var context=[];
 
+//-------------------------------------------------------------------------------------------------
+// makeRandomID - Random hex number
+//-------------------------------------------------------------------------------------------------
+
+function makeRandomID()
+{
+		var str="";
+		var characters       = 'ABCDEF0123456789';
+		var charactersLength = characters.length;
+		for ( var i = 0; i < 16; i++ ) {
+				str += characters.charAt(Math.floor(Math.random() * charactersLength));
+		}	
+		return str;
+}
+
 // Example entities and attributes
 var data=[
-	{name:"Person",x:100,y:100,width:200,height:50,kind:"Entity"},
-	{name:"Car",x:500,y:140,width:200,height:50,kind:"Entity"},	
-	{name:"Has",x:400,y:100,width:50,height:50,kind:"ERRelation"},
-	{name:"ID",x:30,y:30,width:90,height:40,kind:"Attr"},	
+	{name:"Person",x:100,y:100,width:200,height:50,kind:"Entity",id:makeRandomID()},
+	{name:"Car",x:500,y:140,width:200,height:50,kind:"Entity",id:makeRandomID()},	
+	{name:"Has",x:400,y:100,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
+	{name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:makeRandomID()},	
 ];
 
 //------------------------------------=======############==========----------------------------------------
@@ -57,8 +72,6 @@ function mdown(event)
 		}else{
 
 		}
-	
-		
 }
 
 function ddown(event)
@@ -67,7 +80,8 @@ function ddown(event)
 		startY=event.clientY;
 		mb=8;
 	
-		console.log("ddown!");
+		updateSelection(data[findIndex(data,event.currentTarget.id)],null,null);
+	
 }
 
 function mup(event)
@@ -97,7 +111,6 @@ function mmoving(event)
 			
 				// We update position of connected objects
 				updatepos(deltaX,deltaY);
-				
 
 		}
 }
@@ -163,7 +176,17 @@ function zoomout()
 		showdata();
 }
 
-var ctx;
+//-------------------------------------------------------------------------------------------------
+// findIndex - Returns index of object with certain ID
+//-------------------------------------------------------------------------------------------------
+
+function findIndex(arr,id)
+{
+		for(var i=0;i<arr.length;i++){
+				if(arr[i].id==id) return (i+1);
+		}
+		return -1;
+}
 
 //-------------------------------------------------------------------------------------------------
 // Showdata iterates over all diagram elements
@@ -189,7 +212,6 @@ function showdata() {
 		// Iterate over programs
 		for(var i=0;i<data.length;i++){
 				var element=data[i];
-				console.log(element);
 			
 				// Compute size variables
 				var linew=Math.round(strokewidth*zoomfact);
@@ -200,7 +222,7 @@ function showdata() {
 				var hboxh=Math.round(element.height*zoomfact*0.5);
 			
 				str+=`
-				<div id='${element.name}' onclick='logReqe(event);'	class='element' style='
+				<div id='${element.id}' onclick='logReqe(event);'	class='element' onmousedown='ddown(event);' style='
 						left:0px;
 						top:0px;
 						width:${boxw}px;
@@ -232,12 +254,12 @@ function showdata() {
 // updateselection - Update context according to selection parameters or clicked element
 //-------------------------------------------------------------------------------------------------
 
-function updateselection(ctxelement,x,y)
+function updateSelection(ctxelement,x,y)
 {
 		// Clear list of selected elements
 		context=[];
 	
-		if(contextelement!=null){
+		if(ctxelement!=null){
 				// if we pass a context object e.g. we clicked in object
 				context.push(ctxelement);
 		}else if(typeof x != "undefined" && typeof y != "undefined"){
@@ -252,33 +274,23 @@ function updateselection(ctxelement,x,y)
 
 function updatepos(deltaX,deltaY)
 {
+		console.log(deltaX,deltaY);
 		for(var i=0;i<data.length;i++){
 				
 				var element=data[i];
-				var elementbox=document.getElementById(element.name);
-			
-				// if(context.indexOf(element)!=-1 && elementbox!=null){
-				// 		console.log(element.name);
-				// }else 			
-			
+				var elementbox=document.getElementById(element.id);
+						
 				if(elementbox!=null){
-						elementbox.style.left=Math.round((element.x*zoomfact)+(scrollx*(1.0/zoomfact)))+"px";
-						elementbox.style.top=Math.round((element.y*zoomfact)+(scrolly*(1.0/zoomfact)))+"px";
+						if(deltaX!=null||context.indexOf(element)!=-1){
+								elementbox.style.left=(Math.round((element.x*zoomfact)+(scrollx*(1.0/zoomfact)))-deltaX)+"px";
+								elementbox.style.top=(Math.round((element.y*zoomfact)+(scrolly*(1.0/zoomfact)))-deltaY)+"px";
+						}else{
+								elementbox.style.left=Math.round((element.x*zoomfact)+(scrollx*(1.0/zoomfact)))+"px";
+								elementbox.style.top=Math.round((element.y*zoomfact)+(scrolly*(1.0/zoomfact)))+"px";
+						}
 				}
 		}
 		redrawArrows();
-}
-
-//-------------------------------------------------------------------------------------------------
-// findIndex - Returns index of object with certain ID
-//-------------------------------------------------------------------------------------------------
-
-function findIndex(arr,id)
-{
-		for(var i=0;i<arr.length;i++){
-				if(arr[i].id==id) return (i+1);
-		}
-		return -1;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -568,21 +580,6 @@ function drawArrow(x1,y1,x2,y2,col)
 		ctx.lineTo(x2-pdx+adx,y2-pdy+ady);
 		ctx.lineTo(x2,y2);	
 		ctx.fill();	
-}
-
-//-------------------------------------------------------------------------------------------------
-// makeRandomID - Random hex number
-//-------------------------------------------------------------------------------------------------
-
-function makeRandomID()
-{
-		var str="";
-		var characters       = 'ABCDEF0123456789';
-		var charactersLength = characters.length;
-		for ( var i = 0; i < 16; i++ ) {
-				str += characters.charAt(Math.floor(Math.random() * charactersLength));
-		}	
-		return str;
 }
 
 //------------------------------------=======############==========----------------------------------------
