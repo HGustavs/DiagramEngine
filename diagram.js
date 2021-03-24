@@ -28,11 +28,15 @@ var strokewidth=3;
 var lines=[];
 var elements=[];
 
+// Currently clicked object list
+var context=[];
+
 // Example entities and attributes
 var data=[
 	{name:"Person",x:100,y:100,width:200,height:50,kind:"Entity"},
 	{name:"Car",x:500,y:140,width:200,height:50,kind:"Entity"},	
 	{name:"Has",x:400,y:100,width:50,height:50,kind:"ERRelation"},
+	{name:"ID",x:30,y:30,width:90,height:40,kind:"Attr"},	
 ];
 
 //------------------------------------=======############==========----------------------------------------
@@ -41,6 +45,8 @@ var data=[
 
 function mdown(event)
 {
+		console.log(mb,event.target.id);
+	
 		// React to mouse down on container
 		if(event.target.id=="container"){
 				mb=1;		
@@ -49,8 +55,19 @@ function mdown(event)
 				startX=event.clientX;
 				startY=event.clientY;
 		}else{
-				
+
 		}
+	
+		
+}
+
+function ddown(event)
+{
+		startX=event.clientX;
+		startY=event.clientY;
+		mb=8;
+	
+		console.log("ddown!");
 }
 
 function mup(event)
@@ -72,7 +89,16 @@ function mmoving(event)
 				scrolly=sscrolly-Math.round(deltaY*zoomfact);
 			
 				// Update scroll position
-				updatepos();
+				updatepos(null,null);
+		}else if(mb==8){
+				// Moving object
+				deltaX=startX-event.clientX;
+				deltaY=startY-event.clientY;
+			
+				// We update position of connected objects
+				updatepos(deltaX,deltaY);
+				
+
 		}
 }
 
@@ -140,7 +166,7 @@ function zoomout()
 var ctx;
 
 //-------------------------------------------------------------------------------------------------
-// Showdata iterates over all programs/years/periods/courses
+// Showdata iterates over all diagram elements
 //-------------------------------------------------------------------------------------------------
 
 // Generate all courses at appropriate zoom level
@@ -164,20 +190,33 @@ function showdata() {
 		for(var i=0;i<data.length;i++){
 				var element=data[i];
 				console.log(element);
-
+			
+				// Compute size variables
+				var linew=Math.round(strokewidth*zoomfact);
+				var boxw=Math.round(element.width*zoomfact);
+				var boxh=Math.round(element.height*zoomfact);
+				var texth=Math.round(zoomfact*textheight);
+				var hboxw=Math.round(element.width*zoomfact*0.5);
+				var hboxh=Math.round(element.height*zoomfact*0.5);
+			
 				str+=`
 				<div id='${element.name}' onclick='logReqe(event);'	class='element' style='
-						left:${Math.round(element.x*zoomfact)}px;
-						top:${Math.round(element.y*zoomfact)}px;
-						width:${Math.round(element.width*zoomfact)}px;
-						height:${Math.round(element.height*zoomfact)}px;
-						font-size:${Math.round(zoomfact*textheight)}px; 
+						left:0px;
+						top:0px;
+						width:${boxw}px;
+						height:${boxh}px;
+						font-size:${texth}px; 
 				'>`;
-				str+=`<svg width='${Math.round(element.width*zoomfact)}' height='${Math.round(element.height*zoomfact)}' >`;
+				str+=`<svg width='${boxw}' height='${boxh}' >`;
 				if(element.kind=="Entity"){
-						str+="<rect x='"+Math.round(strokewidth*zoomfact)+"' y='"+Math.round(strokewidth*zoomfact)+"' width='"+Math.round((element.width*zoomfact)-(strokewidth*zoomfact*2))+"' height='"+Math.round((element.height*zoomfact)-(strokewidth*zoomfact*2))+"' stroke-width='"+Math.round(strokewidth*zoomfact)+"' stroke='black' fill='pink' />";
+						str+=`<rect x='${linew}' y='${linew}' width='${boxw-(linew*2)}' height='${boxh-(linew*2)}' stroke-width='${linew}' stroke='black' fill='pink' />`;
 				}else{
-						str+=element.name;
+						str+=`<path d="M${linew},${hboxh} 
+                           Q${linew},${linew} ${hboxw},${linew} 
+                           Q${boxw-linew},${linew} ${boxw-linew},${hboxh} 
+                           Q${boxw-linew},${boxh-linew} ${hboxw},${boxh-linew} 
+                           Q${linew},${boxh-linew} ${linew},${hboxh}" 
+                    stroke='black' fill='pink' />`;
 				}
 				str+="</svg>"
 				str+="</div>";
@@ -185,20 +224,42 @@ function showdata() {
 		}
 
 		container.innerHTML=str;
-		updatepos();
+		updatepos(null,null);
 	
 }
+
+//-------------------------------------------------------------------------------------------------
+// updateselection - Update context according to selection parameters or clicked element
+//-------------------------------------------------------------------------------------------------
+
+function updateselection(ctxelement,x,y)
+{
+		// Clear list of selected elements
+		context=[];
+	
+		if(contextelement!=null){
+				// if we pass a context object e.g. we clicked in object
+				context.push(ctxelement);
+		}else if(typeof x != "undefined" && typeof y != "undefined"){
+				// Or if x and y are both defined
+		}
+}
+
 
 //-------------------------------------------------------------------------------------------------
 // updatepos - Update positions of all elements based on the zoom level and view space coordinate
 //-------------------------------------------------------------------------------------------------
 
-function updatepos()
+function updatepos(deltaX,deltaY)
 {
 		for(var i=0;i<data.length;i++){
-				var element=data[i];
 				
+				var element=data[i];
 				var elementbox=document.getElementById(element.name);
+			
+				// if(context.indexOf(element)!=-1 && elementbox!=null){
+				// 		console.log(element.name);
+				// }else 			
 			
 				if(elementbox!=null){
 						elementbox.style.left=Math.round((element.x*zoomfact)+(scrollx*(1.0/zoomfact)))+"px";
