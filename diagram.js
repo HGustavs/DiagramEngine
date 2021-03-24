@@ -40,7 +40,7 @@ function makeRandomID()
 		var str="";
 		var characters       = 'ABCDEF0123456789';
 		var charactersLength = characters.length;
-		for ( var i = 0; i < 16; i++ ) {
+		for ( var i = 0; i < 6; i++ ) {
 				str += characters.charAt(Math.floor(Math.random() * charactersLength));
 		}	
 		return str;
@@ -183,7 +183,7 @@ function zoomout()
 function findIndex(arr,id)
 {
 		for(var i=0;i<arr.length;i++){
-				if(arr[i].id==id) return (i+1);
+				if(arr[i].id==id) return i;
 		}
 		return -1;
 }
@@ -259,6 +259,8 @@ function updateSelection(ctxelement,x,y)
 		// Clear list of selected elements
 		context=[];
 	
+		console.log(ctxelement);
+	
 		if(ctxelement!=null){
 				// if we pass a context object e.g. we clicked in object
 				context.push(ctxelement);
@@ -281,7 +283,7 @@ function updatepos(deltaX,deltaY)
 				var elementbox=document.getElementById(element.id);
 						
 				if(elementbox!=null){
-						if(deltaX!=null||context.indexOf(element)!=-1){
+						if(deltaX!=null&&findIndex(context,element.id)!=-1){
 								elementbox.style.left=(Math.round((element.x*zoomfact)+(scrollx*(1.0/zoomfact)))-deltaX)+"px";
 								elementbox.style.top=(Math.round((element.y*zoomfact)+(scrolly*(1.0/zoomfact)))-deltaY)+"px";
 						}else{
