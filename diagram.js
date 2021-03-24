@@ -47,12 +47,18 @@ function makeRandomID()
 }
 
 // Example entities and attributes
+
+var PersonID=makeRandomID();
+var IDID=makeRandomID();
+
 var data=[
-	{name:"Person",x:100,y:100,width:200,height:50,kind:"Entity",id:makeRandomID()},
+	{name:"Person",x:100,y:100,width:200,height:50,kind:"Entity",id:PersonID},
 	{name:"Car",x:500,y:140,width:200,height:50,kind:"Entity",id:makeRandomID()},	
 	{name:"Has",x:400,y:100,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
-	{name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:makeRandomID()},	
+	{name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},	
 ];
+
+var lines=[{from:PersonID,to:IDID}];
 
 //------------------------------------=======############==========----------------------------------------
 //                                           Mouse events
@@ -222,7 +228,7 @@ function showdata() {
 				var hboxh=Math.round(element.height*zoomfact*0.5);
 			
 				str+=`
-				<div id='${element.id}' onclick='logReqe(event);'	class='element' onmousedown='ddown(event);' style='
+				<div id='${element.id}'	class='element' onmousedown='ddown(event);' style='
 						left:0px;
 						top:0px;
 						width:${boxw}px;
@@ -276,7 +282,6 @@ function updateSelection(ctxelement,x,y)
 
 function updatepos(deltaX,deltaY)
 {
-		console.log(deltaX,deltaY);
 		for(var i=0;i<data.length;i++){
 				
 				var element=data[i];
@@ -299,53 +304,23 @@ function updatepos(deltaX,deltaY)
 // redrawArrows - Redraws arrows based on rprogram and rcourse variables
 //-------------------------------------------------------------------------------------------------
 
-
-var rprogram="UNK";
-var rcourse="UNK";
 function redrawArrows()
 {
+		// Clear all lines
+		for(var i=0;i<data.length;i++){
+				var element=data[i];
+				element.left=[];
+				element.right=[];
+				element.top=[];
+				element.bottom=[];
+		}
+		
+		// Make list of all connectors?
+		connectors=[];
+	
+		
 /*
 		if(rprogram!="UNK"&&rcourse!="UNK"){
-
-				var courseforrk=forrk[rcourse];
-
-        // Clear previously selected courses and highlight current
-        const scors = document.querySelectorAll(".selected-course");
-	    	for (let i = 0; i < scors.length; i++) {
-            let scor=scors[i];
-            scor.style.backgroundColor=colors[0];
-            scor.classList.remove("selected-course");
-        }
-        document.getElementById(rprogram+rcourse).classList.add("selected-course");
-
-				// Clear all top/left/bottom/right arrays for all courses in affected program and add to courses array
-				for(var i=0;i<data.length;i++){
-						var program=data[i];
-						for(var j=0;j<program.years;j++){
-							var periods=program.year[j];
-								for(var k=0;k<4;k++){
-										var period=0;
-										if(k==0) period=periods["4"];
-										if(k==1) period=periods["5"];
-										if(k==2) period=periods["1"];							
-										if(k==3) period=periods["2"];
-										if(typeof period!="undefined"){
-												for(var l=0;l<period.length;l++){
-														var course=period[l];
-														course.left=[];
-														course.right=[];
-														course.top=[];
-														course.bottom=[];
-														// Assign to courses array
-														courses[rprogram+course.code]=course;
-												}
-										}
-								}
-						}
-				}
-
-				// Clear all arrows
-				arrows=[];
 
 				str = logReqRow(courseforrk,rprogram,rcourse,"and");	
 
@@ -409,141 +384,6 @@ function redrawArrows()
 				}
 		}
 */
-}
-
-//-------------------------------------------------------------------------------------------------
-// logReq - Click event for course, find course parameters from element id, and recurse into requirements 
-//-------------------------------------------------------------------------------------------------
-
-function logReqe(event){
-		rprogram=event.target.id.substr(0,5);
-		rcourse=event.target.id.substr(5);
-	
-		redrawArrows();
-}
-
-//-------------------------------------------------------------------------------------------------
-// logReqRow - Recursive function for course requirements 
-//-------------------------------------------------------------------------------------------------
-
-function logReqRow(row,program,course, mode, color_idx=1){
-    let str = "";
-//		console.log("call: ",row,program,course,mode);
-    for(let i=0;i<row.length;i++){
-        let r = row[i];
-				if(i>0){
-						str+=" "+mode+" ";
-				}
-        if(Array.isArray(r)){
-						// For now we assume all second level arrays are "or" - this may need to be revised to support more "exotic" configs
-						str +=" ( "+logReqRow(r,program,course,"or",color_idx++)+" ) ";
-        }else{
-						fromreq=startpoint=document.getElementById(program+r.code);
-						toreq=document.getElementById(program+course);
-						// Highlight requirement course
-            if(fromreq!=null&&toreq!=null){
-								frbox=fromreq.getBoundingClientRect();
-								tobox=toreq.getBoundingClientRect();
-							
-								// Depending on the overlap situation we compute distance between extremes of boxes rather than euclidian midpoints
-								// If no overlap in X / Y
-								if((frbox.left>tobox.right)||(frbox.right<tobox.left)){
-										if(frbox.left>tobox.right){
-												dx=tobox.right-frbox.left;
-										}else{
-												dx=tobox.left-frbox.right;
-										}
-								}else{
-										dx=0;		
-								}
-								if((frbox.top>tobox.bottom)||(frbox.bottom<tobox.top)){
-										if(frbox.top>tobox.bottom){
-												dy=tobox.bottom-frbox.top;
-										}else{
-												dy=tobox.top-frbox.bottom;
-										}
-								}else{
-										dy=0;		
-								}		
-							
-								// This id lets us search for connectors
-								var currid=makeRandomID();
-							
-								// Top left to top left dx,dy for sorting
-								fdx=tobox.left-frbox.left;
-								fdy=tobox.top-frbox.top;
-								fromobj={id:currid,dx:fdx,dy:fdy,course:r.code,box:frbox};
-								toobj={id:currid,dx:-fdx,dy:-fdy,course:course,box:tobox};
-
-								// Detect interconnection variant - overlap or else
-								if(dx==0){
-										if(dy<0){
-												fromobj.side="top";
-												toobj.side="bottom";
-										}else{
-												fromobj.side="bottom";
-												toobj.side="top";
-										}
-								}else if(dy==0){
-										if(dx<0){
-												fromobj.side="left";
-												toobj.side="right";											
-										}else{
-												fromobj.side="right";
-												toobj.side="left";												
-										}
-								}else{
-										if(dx<0){
-												fromobj.side="left";
-										}else{
-												fromobj.side="right";										
-										}
-										if(dy<0){
-												toobj.side="bottom";												
-										}else{
-												toobj.side="top";												
-										}
-								}
-							
-								// Add to objects!
-								if(fromobj.side=="right")  fromobj.arr=courses[program+r.code].right;
-								if(fromobj.side=="left")   fromobj.arr=courses[program+r.code].left;
-								if(fromobj.side=="top")    fromobj.arr=courses[program+r.code].top;
-								if(fromobj.side=="bottom") fromobj.arr=courses[program+r.code].bottom;
-								if(toobj.side=="right")    toobj.arr=courses[program+course].right;
-								if(toobj.side=="left")     toobj.arr=courses[program+course].left;
-								if(toobj.side=="top")      toobj.arr=courses[program+course].top;
-								if(toobj.side=="bottom")   toobj.arr=courses[program+course].bottom;
-							
-								fromobj.arr.issorted=false;
-								toobj.arr.issorted=false;
-							
-								// Store current arrow - we only push new arrows to stack
-								var found=false;
-								for(var ct=0;ct<arrows.length;ct++){
-										if(arrows[ct].from.course==r.code&&arrows[ct].to.course==course) found=true;
-								}
-								if(!found){
-										// Push data to use for sorting connection points to each end of arrow
-										fromobj.arr.push({dx:tobox.left,dy:tobox.top,id:currid});
-										toobj.arr.push({dx:frbox.left,dy:frbox.top,id:currid});
-								
-										arrows.push({id:currid,from:fromobj,to:toobj});
-								}
-							
-								// Update styling
-                fromreq.classList.add("selected-course");                 
-                fromreq.style.backgroundColor=colors[color_idx];
-							
-                                // If this course was found we recurse further
-                                if(hasRecursion){
-                                    logReqRow(forrk[r.code],program,r.code,"and");
-                                }
-            }
-            str += r.credits + " " + r.code;
-        }
-    }
-    return str; 
 }
 
 //-------------------------------------------------------------------------------------------------
