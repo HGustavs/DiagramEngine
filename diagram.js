@@ -58,7 +58,7 @@ var data=[
 	{name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},	
 ];
 
-var lines=[{from:PersonID,to:IDID}];
+var lines=[{fromID:PersonID,toID:IDID}];
 
 //------------------------------------=======############==========----------------------------------------
 //                                           Mouse events
@@ -301,22 +301,63 @@ function updatepos(deltaX,deltaY)
 }
 
 //-------------------------------------------------------------------------------------------------
+// overlapBox - Redraws arrows based on rprogram and rcourse variables
+//-------------------------------------------------------------------------------------------------
+
+function overlapBox(from,to)
+{
+    // Center kinds C CT CB CL CR L R T B
+}
+
+//-------------------------------------------------------------------------------------------------
 // redrawArrows - Redraws arrows based on rprogram and rcourse variables
 //-------------------------------------------------------------------------------------------------
 
 function redrawArrows()
 {
-		// Clear all lines
+    str="";
+
+		// Clear all lines and update with dom object dimensions
 		for(var i=0;i<data.length;i++){
 				var element=data[i];
 				element.left=[];
 				element.right=[];
 				element.top=[];
 				element.bottom=[];
+
+        // Get data from dom elements
+        var domelement=document.getElementById(element.id);
+        element.x1=domelement.clientX;
+        element.y1=domelement.clientY;
+        element.x2=domelement.clientX+domelement.width;
+        element.y2=domelement.clientY+domelement.width;
+        element.cx=element.x1+(domelement.width*0.5);
+        element.cy=element.y1+(domelement.height*0.5);
+
 		}
 		
 		// Make list of all connectors?
 		connectors=[];
+
+    console.log(elements);
+
+    for(var i=0;i<lines.length;i++){
+        var currentline=lines[i];
+        var from=findIndex(data,currentline.fromID);
+        var to=findIndex(data,currentline.toID);
+        var felem=data[from];
+        var toelem=data[to];
+
+        console.log("from: "+felem.name+" to: "+toelem.name)
+
+      }
+
+    // Center
+    // Center X Top
+    // Center X Bottom
+    // Center Y Left
+    // Center Y Right
+
 	
 		
 /*
