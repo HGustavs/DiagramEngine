@@ -327,30 +327,32 @@ function redrawArrows()
 
         // Get data from dom elements
         var domelement=document.getElementById(element.id);
-        element.x1=domelement.clientX;
-        element.y1=domelement.clientY;
-        element.x2=domelement.clientX+domelement.width;
-        element.y2=domelement.clientY+domelement.width;
-        element.cx=element.x1+(domelement.width*0.5);
-        element.cy=element.y1+(domelement.height*0.5);
-
+        var domelementpos=domelement.getBoundingClientRect();
+        element.x1=domelementpos.left;
+        element.y1=domelementpos.top;
+        element.x2=domelementpos.left+domelementpos.width;
+        element.y2=domelementpos.top+domelementpos.width;
+        element.cx=element.x1+(domelementpos.width*0.5);
+        element.cy=element.y1+(domelementpos.height*0.5);
 		}
 		
 		// Make list of all connectors?
 		connectors=[];
 
-    console.log(elements);
+    var from,to,felem,telem;
 
     for(var i=0;i<lines.length;i++){
         var currentline=lines[i];
-        var from=findIndex(data,currentline.fromID);
-        var to=findIndex(data,currentline.toID);
-        var felem=data[from];
-        var toelem=data[to];
+        
+        from=findIndex(data,currentline.fromID);
+        to=findIndex(data,currentline.toID);
+        felem=data[from];
+        telem=data[to];
 
-        console.log("from: "+felem.name+" to: "+toelem.name)
+        str+=`<line x1='${felem.x1}' y1='${felem.y1}' x2="0" y2="20" style="stroke:rgb(255,0,0);stroke-width:2" />`;
+    }
 
-      }
+    document.getElementById("svgoverlay").innerHTML=str;
 
     // Center
     // Center X Top
@@ -425,44 +427,6 @@ function redrawArrows()
 				}
 		}
 */
-}
-
-//-------------------------------------------------------------------------------------------------
-// drawArrow - Canvas code for drawing a filled arrow
-//-------------------------------------------------------------------------------------------------
-
-function drawArrow(x1,y1,x2,y2,col)
-{
-		ctx.lineWidth=2.0;
-	
-		ctx.strokeStyle=col;
-		ctx.fillStyle=col;
-	
-		// Reflect vector and make unit length * 3
-		dx=-(y2-y1);
-		dy=x2-x1;
-		len=Math.sqrt((dx*dx)+(dy*dy));
-		adx=(dx/len)*4.5;
-		ady=(dy/len)*4.5;
-	
-		// Shorten vector to unit length * 8
-		dx=x2-x1;
-		dy=y2-y1;
-		len=Math.sqrt((dx*dx)+(dy*dy));
-		pdx=(dx/len)*8;
-		pdy=(dy/len)*8;
-	
-		ctx.beginPath();
-		ctx.moveTo(x1,y1);
-		ctx.lineTo(x2,y2);
-		ctx.stroke();	
-
-		ctx.beginPath();
-		ctx.moveTo(x2,y2);
-		ctx.lineTo(x2-pdx-adx,y2-pdy-ady);
-		ctx.lineTo(x2-pdx+adx,y2-pdy+ady);
-		ctx.lineTo(x2,y2);	
-		ctx.fill();	
 }
 
 //------------------------------------=======############==========----------------------------------------
