@@ -3,7 +3,7 @@ var auto_update=null;
 var uidArr=[];
 
 //------------------------------------=======############==========----------------------------------------
-//                           Defaults, mouse variables and zoom variables
+//                           Defaults, mouse variables and zoom variables  
 //------------------------------------=======############==========----------------------------------------
 
 var mb,startX,startY;
@@ -42,7 +42,7 @@ function makeRandomID()
 		var charactersLength = characters.length;
 		for ( var i = 0; i < 6; i++ ) {
 				str += characters.charAt(Math.floor(Math.random() * charactersLength));
-		}	
+		}
 		return str;
 }
 
