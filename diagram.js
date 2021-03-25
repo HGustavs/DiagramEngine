@@ -66,8 +66,6 @@ var lines=[{fromID:PersonID,toID:IDID}];
 
 function mdown(event)
 {
-		console.log(mb,event.target.id);
-	
 		// React to mouse down on container
 		if(event.target.id=="container"){
 				mb=1;		
@@ -301,15 +299,6 @@ function updatepos(deltaX,deltaY)
 }
 
 //-------------------------------------------------------------------------------------------------
-// overlapBox - Redraws arrows based on rprogram and rcourse variables
-//-------------------------------------------------------------------------------------------------
-
-function overlapBox(from,to)
-{
-    // Center kinds C CT CB CL CR L R T B
-}
-
-//-------------------------------------------------------------------------------------------------
 // redrawArrows - Redraws arrows based on rprogram and rcourse variables
 //-------------------------------------------------------------------------------------------------
 
@@ -331,7 +320,7 @@ function redrawArrows()
         element.x1=domelementpos.left;
         element.y1=domelementpos.top;
         element.x2=domelementpos.left+domelementpos.width;
-        element.y2=domelementpos.top+domelementpos.width;
+        element.y2=domelementpos.top+domelementpos.height;
         element.cx=element.x1+(domelementpos.width*0.5);
         element.cy=element.y1+(domelementpos.height*0.5);
 		}
@@ -339,94 +328,70 @@ function redrawArrows()
 		// Make list of all connectors?
 		connectors=[];
 
-    var from,to,felem,telem;
-
     for(var i=0;i<lines.length;i++){
         var currentline=lines[i];
+        var felem,telem,dx,dy;
         
-        from=findIndex(data,currentline.fromID);
-        to=findIndex(data,currentline.toID);
-        felem=data[from];
-        telem=data[to];
+        felem=data[findIndex(data,currentline.fromID)];
+        telem=data[findIndex(data,currentline.toID)];
+        dx=felem.cx-telem.cx;
+        dy=felem.cy-telem.cy;
 
-        str+=`<line x1='${felem.x1}' y1='${felem.y1}' x2="0" y2="20" style="stroke:rgb(255,0,0);stroke-width:2" />`;
+        // Figure out overlap - if Y overlap we use sides else use top/bottom
+        var overlapY=true;
+        if(felem.y1>telem.y2||felem.y2<telem.y1) overlapY=false;
+        var overlapX=true;
+        if(felem.x1>telem.x2||felem.x2<telem.x1) overlapX=false;        
+        var majorX=true;
+        if(Math.abs(dy)>Math.abs(dx)) majorX=false;
+
+        // Determine connection type (top to bottom / left to right or reverse - (no top to side possible)
+        var ctype=0;
+        if(overlapY||((majorX)&&(!overlapX))){
+            if(dx>0) ctype="LR"
+            else ctype="RL"; 
+        }else{
+            if(dy>0) ctype="TB";
+            else ctype="BT"; 
+        }
+
+        // Add accordingly to association end
+        
+
+    }
+
+    // Sort all association ends that number above 0 according to direction of line
+
+    // Draw each line using sorted line ends when applicable
+    for(var i=0;i<lines.length;i++){
+        var currentline=lines[i];
+        var felem,telem,dx,dy;
+        
+        felem=data[findIndex(data,currentline.fromID)];
+        telem=data[findIndex(data,currentline.toID)];
+
+        // Draw each line - compute end coordinate from position in list compared to list count
+        fx=felem.cx;
+        fy=felem.cy;
+        tx=telem.cx;
+        ty=telem.cy;
+
+        // Collect coordinates
+        if(ctype=="BT"){
+            fy=felem.y2;
+        }else if(ctype=="TB"){
+            fy=felem.y1;
+        }else if(ctype=="RL"){
+            fx=felem.x2;
+        }else if(ctype=="LR"){
+            fx=felem.x1;
+        }
+
+        str+=`<line x1='${fx}' y1='${fy}' x2='${tx}' y2='${ty}' stroke='#f44' stroke-width='2' />`;
     }
 
     document.getElementById("svgoverlay").innerHTML=str;
 
-    // Center
-    // Center X Top
-    // Center X Bottom
-    // Center Y Left
-    // Center Y Right
-
-	
-		
-/*
-		if(rprogram!="UNK"&&rcourse!="UNK"){
-
-				str = logReqRow(courseforrk,rprogram,rcourse,"and");	
-
-				ctx.clearRect(0,0,2000,2000);
-				console.log(arrows.length);
-			
-				var col="#841";
-
-				// Draw all arrows
-				for(var i=0;i<arrows.length;i++){
-						var arrow=arrows[i];
-
-						// if(arrow.from.course=="IT311G"||arrow.to.course=="IT311G") console.log(arrow);
-						if(arrow.from.arr.issorted==false){
-								arrow.from.arr.issorted=true;
-								arrow.from.arr.sort(function(a, b){return Math.atan2(a.dy,a.dx)-Math.atan2(b.dy,b.dx)});
-						}
-						if(arrow.to.arr.issorted==false){			
-								arrow.to.arr.issorted=true;
-								arrow.to.arr.sort(function(a, b){return Math.atan2(a.dy,a.dx)-Math.atan2(b.dy,b.dx)});			
-						}
-
-						// I believe that left/right should have x-major sorting instead of y major sorting
-						// Further testing needed to figure out if we have any situations with many crossing arrows?
-						if(arrow.from.side=="top"){
-								var x1=arrow.from.box.left+((arrow.from.box.width/(arrow.from.arr.length+1))*findIndex(arrow.from.arr,arrow.id));
-								var y1=arrow.from.box.top;
-						}
-						if(arrow.from.side=="bottom"){
-								var x1=arrow.from.box.left+((arrow.from.box.width/(arrow.from.arr.length+1))*findIndex(arrow.from.arr,arrow.id));
-								var y1=arrow.from.box.bottom;
-						}
-						if(arrow.from.side=="left"){
-								var x1=arrow.from.box.left;
-								var y1=arrow.from.box.top+((arrow.from.box.height/(arrow.from.arr.length+1))*findIndex(arrow.from.arr,arrow.id));
-						}
-						if(arrow.from.side=="right"){
-								var x1=arrow.from.box.right;
-								var y1=arrow.from.box.top+((arrow.from.box.height/(arrow.from.arr.length+1))*findIndex(arrow.from.arr,arrow.id));
-						}			
-						if(arrow.to.side=="top"){
-								arrow.to.arr.sort(function(a, b){return Math.atan2(b.dy,b.dx)-Math.atan2(a.dy,a.dx)});			
-								//arrow.to.arr.sort(function(a, b){if(a.dy==b.dy){return a.dx-b.dx}else{return b.dy-a.dy}});
-								var x2=arrow.to.box.left+((arrow.to.box.width/(arrow.to.arr.length+1))*findIndex(arrow.to.arr,arrow.id));
-								var y2=arrow.to.box.top;
-						}
-						if(arrow.to.side=="bottom"){
-								var x2=arrow.to.box.left+((arrow.to.box.width/(arrow.to.arr.length+1))*findIndex(arrow.to.arr,arrow.id));
-								var y2=arrow.to.box.bottom;
-						}
-						if(arrow.to.side=="left"){
-								var x2=arrow.to.box.left;
-								var y2=arrow.to.box.top+((arrow.to.box.height/(arrow.to.arr.length+1))*findIndex(arrow.to.arr,arrow.id));
-						}
-						if(arrow.to.side=="right"){
-								var x2=arrow.to.box.right;
-								var y2=arrow.to.box.top+((arrow.to.box.height/(arrow.to.arr.length+1))*findIndex(arrow.to.arr,arrow.id));
-
-						}
-						drawArrow(x1,y1,x2,y2,col);
-				}
-		}
-*/
 }
 
 //------------------------------------=======############==========----------------------------------------
