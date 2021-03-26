@@ -50,15 +50,23 @@ function makeRandomID()
 
 var PersonID=makeRandomID();
 var IDID=makeRandomID();
+var NameID=makeRandomID();
+var SizeID=makeRandomID();
 
 var data=[
-	{name:"Person",x:100,y:100,width:200,height:50,kind:"Entity",id:PersonID},
-	{name:"Car",x:500,y:140,width:200,height:50,kind:"Entity",id:makeRandomID()},	
-	{name:"Has",x:400,y:100,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
-	{name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},	
+    {name:"Person",x:100,y:100,width:200,height:50,kind:"Entity",id:PersonID},
+    {name:"Car",x:500,y:140,width:200,height:50,kind:"Entity",id:makeRandomID()},	
+    {name:"Has",x:420,y:60,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
+    {name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},
+    {name:"Name",x:170,y:30,width:90,height:40,kind:"Attr",id:NameID},
+    {name:"Size",x:320,y:120,width:90,height:40,kind:"Attr",id:SizeID},
 ];
 
-var lines=[{fromID:PersonID,toID:IDID}];
+var lines=[
+    {fromID:PersonID,toID:IDID},
+    {fromID:PersonID,toID:NameID},
+    {fromID:PersonID,toID:SizeID}
+];
 
 //------------------------------------=======############==========----------------------------------------
 //                                           Mouse events
@@ -348,11 +356,11 @@ function redrawArrows()
         // Determine connection type (top to bottom / left to right or reverse - (no top to side possible)
         var ctype=0;
         if(overlapY||((majorX)&&(!overlapX))){
-            if(dx>0) ctype="LR"
-            else ctype="RL"; 
+            if(dx>0) currentline.ctype="LR"
+            else currentline.ctype="RL"; 
         }else{
-            if(dy>0) ctype="TB";
-            else ctype="BT"; 
+            if(dy>0) currentline.ctype="TB";
+            else currentline.ctype="BT"; 
         }
 
         // Add accordingly to association end
@@ -377,13 +385,13 @@ function redrawArrows()
         ty=telem.cy;
 
         // Collect coordinates
-        if(ctype=="BT"){
+        if(currentline.ctype=="BT"){
             fy=felem.y2;
-        }else if(ctype=="TB"){
+        }else if(currentline.ctype=="TB"){
             fy=felem.y1;
-        }else if(ctype=="RL"){
+        }else if(currentline.ctype=="RL"){
             fx=felem.x2;
-        }else if(ctype=="LR"){
+        }else if(currentline.ctype=="LR"){
             fx=felem.x1;
         }
 
