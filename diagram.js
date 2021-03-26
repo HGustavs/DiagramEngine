@@ -54,8 +54,8 @@ var NameID=makeRandomID();
 var SizeID=makeRandomID();
 
 var data=[
-    {name:"Person",x:100,y:100,width:200,height:50,kind:"Entity",id:PersonID},
-    {name:"Car",x:500,y:140,width:200,height:50,kind:"Entity",id:makeRandomID()},	
+    {name:"Person",x:100,y:100,width:200,height:50,kind:"EREntity",id:PersonID},
+    {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:makeRandomID()},	
     {name:"Has",x:420,y:60,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
     {name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},
     {name:"Name",x:170,y:30,width:90,height:40,kind:"Attr",id:NameID},
@@ -63,9 +63,9 @@ var data=[
 ];
 
 var lines=[
-    {fromID:PersonID,toID:IDID},
-    {fromID:PersonID,toID:NameID},
-    {fromID:PersonID,toID:SizeID}
+    {id:makeRandomID(),fromID:PersonID,toID:IDID},
+    {id:makeRandomID(),fromID:PersonID,toID:NameID},
+    {id:makeRandomID(),fromID:PersonID,toID:SizeID}
 ];
 
 //------------------------------------=======############==========----------------------------------------
@@ -242,7 +242,7 @@ function showdata() {
 						font-size:${texth}px; 
 				'>`;
 				str+=`<svg width='${boxw}' height='${boxh}' >`;
-				if(element.kind=="Entity"){
+				if(element.kind=="EREntity"){
 						str+=`<rect x='${linew}' y='${linew}' width='${boxw-(linew*2)}' height='${boxh-(linew*2)}' stroke-width='${linew}' stroke='black' fill='pink' />`;
 				}else{
 						str+=`<path d="M${linew},${hboxh} 
@@ -364,8 +364,20 @@ function redrawArrows()
         }
 
         // Add accordingly to association end
-        
-
+        if(currentline.ctype=="LR"){
+            if(felem.kind=="EREntity") felem.left.push(currentline.id);
+            if(telem.kind=="EREntity") telem.right.push(currentline.id);
+        }else if(currentline.ctype=="RL"){
+          if(felem.kind=="EREntity") felem.right.push(currentline.id);
+          if(telem.kind=="EREntity") telem.left.push(currentline.id);
+        }else if(currentline.ctype=="TB"){
+          if(felem.kind=="EREntity") felem.top.push(currentline.id);
+          if(telem.kind=="EREntity") telem.bottom.push(currentline.id);
+        }else if(currentline.ctype=="BT"){
+          if(felem.kind=="EREntity") felem.bottom.push(currentline.id);
+          if(telem.kind=="EREntity") telem.top.push(currentline.id);
+        }
+    
     }
 
     // Sort all association ends that number above 0 according to direction of line
@@ -387,8 +399,10 @@ function redrawArrows()
         // Collect coordinates
         if(currentline.ctype=="BT"){
             fy=felem.y2;
+            fx=felem.x1+(((felem.x2-felem.x1)/(felem.bottom.length+1))*(felem.bottom.indexOf(currentline.id)+1));
         }else if(currentline.ctype=="TB"){
             fy=felem.y1;
+            fx=felem.x1+(((felem.x2-felem.x1)/(felem.top.length+1))*(felem.top.indexOf(currentline.id)+1));
         }else if(currentline.ctype=="RL"){
             fx=felem.x2;
         }else if(currentline.ctype=="LR"){
