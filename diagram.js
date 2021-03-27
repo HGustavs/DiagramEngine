@@ -2,6 +2,8 @@ var service =[];
 var auto_update=null;
 var uidArr=[];
 
+var str="";
+
 //------------------------------------=======############==========----------------------------------------
 //                           Defaults, mouse variables and zoom variables  
 //------------------------------------=======############==========----------------------------------------
@@ -306,15 +308,9 @@ function updatepos(deltaX,deltaY)
 
 function linetest(x1,y1,x2,y2, x3,y3,x4,y4)
 {
-    c.strokeStyle="#4f4";
-    c.lineWidth=4.0;
-    c.beginPath();
-    c.moveTo(x1,y1);
-    c.lineTo(x2,y2);
-    c.moveTo(x3,y3);
-    c.lineTo(x4,y4);
-    c.stroke();
-    
+    str+=`<line x1='${x1}' y1='${y1}' x2='${x2}' y2='${y2}' stroke='#44f' stroke-width='2' />`;
+    str+=`<line x1='${x3}' y1='${y3}' x2='${x4}' y2='${y4}' stroke='#44f' stroke-width='2' />`    
+
     var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
     var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
     if (isNaN(x)||isNaN(y)) {
@@ -348,14 +344,14 @@ function linetest(x1,y1,x2,y2, x3,y3,x4,y4)
 // sortvectors - Uses steering vectors as a sorting criteria for lines
 //-------------------------------------------------------------------------------------------------
 
-function sortvectors(a,b,elementid,axis)
+function sortvectors(a,b,ends,elementid,axis)
 {
     // Get dx dy centered on association end e.g. invert vector if necessary
     var lineA=lines[findIndex(lines,a)];
     var lineB=lines[findIndex(lines,b)];
     var parent=data[findIndex(data,elementid)];
 
-    // Retrieve opposite element
+    // Retrieve opposite element - assume element center (for now)
     if(lineA.fromID==elementid){
         toElementA=data[findIndex(data,lineA.toID)];
     }else{
@@ -367,15 +363,26 @@ function sortvectors(a,b,elementid,axis)
         toElementB=data[findIndex(data,lineB.fromID)];
     }
 
-    dxA=toElementA.cx-parent.cx;
-    dyA=toElementA.cy-parent.cy;
-    dxB=toElementB.cx-parent.cx;
-    dyB=toElementB.cy-parent.cy;
+    // If lines cross swap otherwise keep as is
+    if(axis==0||axis==1){
+          // Left side
+          ay=parent.y1+(((parent.y2-parent.y1)/(ends.length+1))*(ends.indexOf(a)+1));
+          by=parent.y1+(((parent.y2-parent.y1)/(ends.length+1))*(ends.indexOf(b)+1));
+          if(axis==0) parentx=parent.x1
+          else parentx=parent.x2;
 
-    if(axis==0) return (Math.atan(dyB/dxB)-Math.atan(dyA/dxA))
-    else return 0;
-    
-    // (Math.atan(dyA/dxA)-Math.atan(dyB/dxB))
+          if(linetest(toElementA.cx,toElementA.cy,parentx,ay,toElementB.cx,toElementB.cy,parentx,by)===false) return -1
+    }else if(axis==2||axis==3){
+          // Top / Bottom side
+          ax=parent.x1+(((parent.x2-parent.x1)/(ends.length+1))*(ends.indexOf(a)+1));
+          bx=parent.x1+(((parent.x2-parent.x1)/(ends.length+1))*(ends.indexOf(b)+1));
+          if(axis==2) parenty=parent.y1
+          else parenty=parent.y2;
+
+          if(linetest(toElementA.cx,toElementA.cy,ax,parenty,toElementB.cx,toElementB.cy,bx,parenty)===false) return -1
+    }
+
+    return 1;
 
 }
 
@@ -455,19 +462,13 @@ function redrawArrows()
 
     // Sort all association ends that number above 0 according to direction of line
 		for(var i=0;i<data.length;i++){
-				
       var element=data[i];
 
       // Only sort if size of list is >= 2
-      if(element.top.length>1) element.top.sort(function(a, b){return sortvectors(b,a,element.id,0)});
-      if(element.bottom.length>1) element.bottom.sort(function(a, b){return sortvectors(a,b,element.id,0)});
-      if(element.left.length>1) element.left.sort(function(a, b){return sortvectors(a,b,element.id,1)});
-      if(element.right.length>1) element.right.sort(function(a, b){return sortvectors(a,b,element.id,1)});
-      
-      for(var j=0;j<element.left.length;j++){
-          var val=element.left[j];
-          //console.log(j,lines[findIndex(lines,val)]);
-      }
+      if(element.top.length>1) element.top.sort(function(a, b){return sortvectors(a,b,element.top,element.id,2)});
+      if(element.bottom.length>1) element.bottom.sort(function(a, b){return sortvectors(a,b,element.bottom,element.id,3)});
+      if(element.left.length>1) element.left.sort(function(a, b){return sortvectors(a,b,element.left,element.id,0)});
+      if(element.right.length>1) element.right.sort(function(a, b){return sortvectors(a,b,element.right,element.id,1)});
     }    
 
     // Draw each line using sorted line ends when applicable
@@ -499,7 +500,7 @@ function redrawArrows()
             fy=felem.y1+(((felem.y2-felem.y1)/(felem.left.length+1))*(felem.left.indexOf(currentline.id)+1));
         }
 
-        str+=`<line x1='${fx}' y1='${fy}' x2='${tx}' y2='${ty}' stroke='#f44' stroke-width='2' />`;
+         str+=`<line x1='${fx}' y1='${fy}' x2='${tx}' y2='${ty}' stroke='#f44' stroke-width='4' />`;
     }
 
     document.getElementById("svgoverlay").innerHTML=str;
