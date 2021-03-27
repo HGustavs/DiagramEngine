@@ -59,7 +59,7 @@ var data=[
     {name:"Has",x:420,y:60,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
     {name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},
     {name:"Name",x:170,y:30,width:90,height:40,kind:"Attr",id:NameID},
-    {name:"Size",x:320,y:120,width:90,height:40,kind:"Attr",id:SizeID},
+    {name:"Size",x:320,y:420,width:90,height:40,kind:"Attr",id:SizeID},
 ];
 
 var lines=[
@@ -307,6 +307,35 @@ function updatepos(deltaX,deltaY)
 }
 
 //-------------------------------------------------------------------------------------------------
+// sortvectors - Uses steering vectors as a sorting criteria for lines
+//-------------------------------------------------------------------------------------------------
+
+function sortvectors(a,b,elementid,axis)
+{
+    // Get dx dy centered on association end e.g. invert vector if necessary
+    var lineA=lines[findIndex(lines,a)];
+    var lineB=lines[findIndex(lines,b)];
+
+    // Retrieve opposite element
+    if(lineA.fromID==elementid){
+        toElementA=data[findIndex(data,lineA.toID)];
+    }else{
+        toElementA=data[findIndex(data,lineA.fromID)];
+    }
+    if(lineB.fromID==elementid){
+        toElementB=data[findIndex(data,lineB.toID)];
+    }else{
+        toElementB=data[findIndex(data,lineB.fromID)];
+    }
+
+    if(axis==0){
+        return toElementA.cx-toElementB.cx;
+    }else{
+        return toElementA.cy-toElementB.cy;
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
 // redrawArrows - Redraws arrows based on rprogram and rcourse variables
 //-------------------------------------------------------------------------------------------------
 
@@ -342,8 +371,8 @@ function redrawArrows()
         
         felem=data[findIndex(data,currentline.fromID)];
         telem=data[findIndex(data,currentline.toID)];
-        dx=felem.cx-telem.cx;
-        dy=felem.cy-telem.cy;
+        currentline.dx=felem.cx-telem.cx;
+        currentline.dy=felem.cy-telem.cy;
 
         // Figure out overlap - if Y overlap we use sides else use top/bottom
         var overlapY=true;
@@ -351,15 +380,15 @@ function redrawArrows()
         var overlapX=true;
         if(felem.x1>telem.x2||felem.x2<telem.x1) overlapX=false;        
         var majorX=true;
-        if(Math.abs(dy)>Math.abs(dx)) majorX=false;
+        if(Math.abs(currentline.dy)>Math.abs(currentline.dx)) majorX=false;
 
         // Determine connection type (top to bottom / left to right or reverse - (no top to side possible)
         var ctype=0;
         if(overlapY||((majorX)&&(!overlapX))){
-            if(dx>0) currentline.ctype="LR"
+            if(currentline.dx>0) currentline.ctype="LR"
             else currentline.ctype="RL"; 
         }else{
-            if(dy>0) currentline.ctype="TB";
+            if(currentline.dy>0) currentline.ctype="TB";
             else currentline.ctype="BT"; 
         }
 
@@ -381,6 +410,17 @@ function redrawArrows()
     }
 
     // Sort all association ends that number above 0 according to direction of line
+		for(var i=0;i<data.length;i++){
+				
+      var element=data[i];
+
+      // Only sort if size of list is >= 2
+      if(element.top.length>1) element.top.sort(function(a, b){return sortvectors(a,b,element.id,0)});
+      if(element.bottom.length>1) element.bottom.sort(function(a, b){return sortvectors(a,b,element.id,0)});
+      if(element.left.length>1) element.left.sort(function(a, b){return sortvectors(a,b,element.id,1)});
+      if(element.right.length>1) element.right.sort(function(a, b){return sortvectors(a,b,element.id,1)});
+      
+    }    
 
     // Draw each line using sorted line ends when applicable
     for(var i=0;i<lines.length;i++){
@@ -405,15 +445,16 @@ function redrawArrows()
             fx=felem.x1+(((felem.x2-felem.x1)/(felem.top.length+1))*(felem.top.indexOf(currentline.id)+1));
         }else if(currentline.ctype=="RL"){
             fx=felem.x2;
+            fy=felem.y1+(((felem.y2-felem.y1)/(felem.right.length+1))*(felem.right.indexOf(currentline.id)+1));
         }else if(currentline.ctype=="LR"){
             fx=felem.x1;
+            fy=felem.y1+(((felem.y2-felem.y1)/(felem.left.length+1))*(felem.left.indexOf(currentline.id)+1));
         }
 
         str+=`<line x1='${fx}' y1='${fy}' x2='${tx}' y2='${ty}' stroke='#f44' stroke-width='2' />`;
     }
 
     document.getElementById("svgoverlay").innerHTML=str;
-
 }
 
 //------------------------------------=======############==========----------------------------------------
