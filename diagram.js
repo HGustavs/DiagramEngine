@@ -55,6 +55,8 @@ var PersonID=makeRandomID();
 var IDID=makeRandomID();
 var NameID=makeRandomID();
 var SizeID=makeRandomID();
+var HasID=makeRandomID();
+var CarID=makeRandomID();
 
 // Save default to model - updating defaults sets property to all of model
 var defaults={
@@ -66,8 +68,8 @@ var defaults={
 // Demo data - read / write from service later on
 var data=[
     {name:"Person",x:100,y:100,width:200,height:50,kind:"EREntity",id:PersonID},
-    {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:makeRandomID()},	
-    {name:"Has",x:420,y:60,width:60,height:60,kind:"ERRelation",id:makeRandomID()},
+    {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:CarID},	
+    {name:"Has",x:420,y:60,width:60,height:60,kind:"ERRelation",id:HasID},
     {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID},
     {name:"Name",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID},
     {name:"Size",x:320,y:420,width:90,height:45,kind:"ERAttr",id:SizeID},
@@ -75,8 +77,11 @@ var data=[
 
 var lines=[
     {id:makeRandomID(),fromID:PersonID,toID:IDID,kind:"Normal"},
-    {id:makeRandomID(),fromID:PersonID,toID:NameID,kind:"Double"},
-    {id:makeRandomID(),fromID:PersonID,toID:SizeID,kind:"Normal"}
+    {id:makeRandomID(),fromID:PersonID,toID:NameID,kind:"Normal"},
+    {id:makeRandomID(),fromID:PersonID,toID:SizeID,kind:"Normal"},
+
+   {id:makeRandomID(),fromID:PersonID,toID:HasID,kind:"Normal"},
+   {id:makeRandomID(),fromID:HasID,toID:CarID,kind:"Double"}        
 ];
 
 //------------------------------------=======############==========----------------------------------------
@@ -265,7 +270,7 @@ function showdata() {
                            Q${boxw-linew},${linew} ${boxw-linew},${hboxh} 
                            Q${boxw-linew},${boxh-linew} ${hboxw},${boxh-linew} 
                            Q${linew},${boxh-linew} ${linew},${hboxh}" 
-                    stroke='black' fill='pink' />
+                    stroke='black' fill='pink' stroke-dasharray='4 4' />
                     <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
                     `;
 				}else if(element.kind=="ERRelation"){
