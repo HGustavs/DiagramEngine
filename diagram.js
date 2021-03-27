@@ -3,6 +3,7 @@ var auto_update=null;
 var uidArr=[];
 
 var str="";
+var defs="";
 
 //------------------------------------=======############==========----------------------------------------
 //                           Defaults, mouse variables and zoom variables  
@@ -23,8 +24,8 @@ var scrolly=100;
 // Constants
 var elementwidth=200;
 var elementheight=50;
-var textheight=16;
-var strokewidth=3;
+var textheight=18;
+var strokewidth=1.5;
 
 // Arrow drawing stuff - diagram elements and diagram lines
 var lines=[];
@@ -55,19 +56,27 @@ var IDID=makeRandomID();
 var NameID=makeRandomID();
 var SizeID=makeRandomID();
 
+// Save default to model - updating defaults sets property to all of model
+var defaults={
+    defaultERtentity:{kind:"EREntity",fill:"White",Stroke:"Black",width:200,height:50},
+    defaultERrelation:{kind:"ERRelation",fill:"White",Stroke:"Black",width:60,height:60},
+    defaultERattr:{kind:"ERAttr",fill:"White",Stroke:"Black",width:90,height:45}
+}
+
+// Demo data - read / write from service later on
 var data=[
     {name:"Person",x:100,y:100,width:200,height:50,kind:"EREntity",id:PersonID},
     {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:makeRandomID()},	
-    {name:"Has",x:420,y:60,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
-    {name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},
-    {name:"Name",x:170,y:50,width:90,height:40,kind:"Attr",id:NameID},
-    {name:"Size",x:320,y:420,width:90,height:40,kind:"Attr",id:SizeID},
+    {name:"Has",x:420,y:60,width:60,height:60,kind:"ERRelation",id:makeRandomID()},
+    {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID},
+    {name:"Name",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID},
+    {name:"Size",x:320,y:420,width:90,height:45,kind:"ERAttr",id:SizeID},
 ];
 
 var lines=[
-    {id:makeRandomID(),fromID:PersonID,toID:IDID},
-    {id:makeRandomID(),fromID:PersonID,toID:NameID},
-    {id:makeRandomID(),fromID:PersonID,toID:SizeID}
+    {id:makeRandomID(),fromID:PersonID,toID:IDID,kind:"Normal"},
+    {id:makeRandomID(),fromID:PersonID,toID:NameID,kind:"Double"},
+    {id:makeRandomID(),fromID:PersonID,toID:SizeID,kind:"Normal"}
 ];
 
 //------------------------------------=======############==========----------------------------------------
@@ -245,15 +254,24 @@ function showdata() {
 				'>`;
 				str+=`<svg width='${boxw}' height='${boxh}' >`;
 				if(element.kind=="EREntity"){
-						str+=`<rect x='${linew}' y='${linew}' width='${boxw-(linew*2)}' height='${boxh-(linew*2)}' stroke-width='${linew}' stroke='black' fill='pink' />`;
-				}else{
+						str+=`<rect x='${linew}' y='${linew}' width='${boxw-(linew*2)}' height='${boxh-(linew*2)}' 
+                   stroke-width='${linew}' stroke='black' fill='pink' />
+                   <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
+                   `;
+            
+				}else if(element.kind=="ERAttr"){
 						str+=`<path d="M${linew},${hboxh} 
                            Q${linew},${linew} ${hboxw},${linew} 
                            Q${boxw-linew},${linew} ${boxw-linew},${hboxh} 
                            Q${boxw-linew},${boxh-linew} ${hboxw},${boxh-linew} 
                            Q${linew},${boxh-linew} ${linew},${hboxh}" 
-                    stroke='black' fill='pink' />`;
-				}
+                    stroke='black' fill='pink' />
+                    <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
+                    `;
+				}else if(element.kind=="ERRelation"){
+            str+=`<polygon points="${linew},${hboxh} ${hboxw},${linew} ${boxw-linew},${hboxh} ${hboxw},${boxh-linew}"  
+                   stroke-width='${linew}' stroke='black' fill='pink'/>`;
+        }
 				str+="</svg>"
 				str+="</div>";
 
@@ -308,8 +326,9 @@ function updatepos(deltaX,deltaY)
 
 function linetest(x1,y1,x2,y2, x3,y3,x4,y4)
 {
-    str+=`<line x1='${x1}' y1='${y1}' x2='${x2}' y2='${y2}' stroke='#44f' stroke-width='2' />`;
-    str+=`<line x1='${x3}' y1='${y3}' x2='${x4}' y2='${y4}' stroke='#44f' stroke-width='2' />`    
+    // Display line test locations using svg lines
+    // str+=`<line x1='${x1}' y1='${y1}' x2='${x2}' y2='${y2}' stroke='#44f' stroke-width='2' />`;
+    // str+=`<line x1='${x3}' y1='${y3}' x2='${x4}' y2='${y4}' stroke='#44f' stroke-width='2' />`    
 
     var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
     var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
@@ -383,7 +402,6 @@ function sortvectors(a,b,ends,elementid,axis)
     }
 
     return 1;
-
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -500,7 +518,19 @@ function redrawArrows()
             fy=felem.y1+(((felem.y2-felem.y1)/(felem.left.length+1))*(felem.left.indexOf(currentline.id)+1));
         }
 
-         str+=`<line x1='${fx}' y1='${fy}' x2='${tx}' y2='${ty}' stroke='#f44' stroke-width='4' />`;
+        if(currentline.kind=="Normal"){
+            str+=`<line x1='${fx}' y1='${fy}' x2='${tx}' y2='${ty}' stroke='#f44' stroke-width='${strokewidth}' />`;
+        }else if(currentline.kind=="Double"){
+            // We mirror the line vector
+            dy=-(tx-fx);
+            dx=ty-fy;
+            var len=Math.sqrt((dx*dx)+(dy*dy));
+            dy=dy/len;
+            dx=dx/len;
+            str+=`<line x1='${fx+(dx*strokewidth*1.5)}' y1='${fy+(dy*strokewidth*1.5)}' x2='${tx+(dx*strokewidth*1.5)}' y2='${ty+(dy*strokewidth*1.5)}' stroke='#f44' stroke-width='${strokewidth}' />`;
+            str+=`<line x1='${fx-(dx*strokewidth*1.5)}' y1='${fy-(dy*strokewidth*1.5)}' x2='${tx-(dx*strokewidth*1.5)}' y2='${ty-(dy*strokewidth*1.5)}' stroke='#f44' stroke-width='${strokewidth}' />`;
+        }
+         
     }
 
     document.getElementById("svgoverlay").innerHTML=str;
