@@ -58,7 +58,7 @@ var data=[
     {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:makeRandomID()},	
     {name:"Has",x:420,y:60,width:50,height:50,kind:"ERRelation",id:makeRandomID()},
     {name:"ID",x:30,y:30,width:90,height:40,kind:"Attr",id:IDID},
-    {name:"Name",x:170,y:30,width:90,height:40,kind:"Attr",id:NameID},
+    {name:"Name",x:170,y:50,width:90,height:40,kind:"Attr",id:NameID},
     {name:"Size",x:320,y:420,width:90,height:40,kind:"Attr",id:SizeID},
 ];
 
@@ -270,9 +270,7 @@ function updateSelection(ctxelement,x,y)
 {
 		// Clear list of selected elements
 		context=[];
-	
-		console.log(ctxelement);
-	
+		
 		if(ctxelement!=null){
 				// if we pass a context object e.g. we clicked in object
 				context.push(ctxelement);
@@ -306,6 +304,46 @@ function updatepos(deltaX,deltaY)
 		redrawArrows();
 }
 
+function linetest(x1,y1,x2,y2, x3,y3,x4,y4)
+{
+    c.strokeStyle="#4f4";
+    c.lineWidth=4.0;
+    c.beginPath();
+    c.moveTo(x1,y1);
+    c.lineTo(x2,y2);
+    c.moveTo(x3,y3);
+    c.lineTo(x4,y4);
+    c.stroke();
+    
+    var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+    var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+    if (isNaN(x)||isNaN(y)) {
+        return false;
+    } else {
+        if (x1>=x2) {
+            if (!(x2<=x&&x<=x1)) {return false;}
+        } else {
+            if (!(x1<=x&&x<=x2)) {return false;}
+        }
+        if (y1>=y2) {
+            if (!(y2<=y&&y<=y1)) {return false;}
+        } else {
+            if (!(y1<=y&&y<=y2)) {return false;}
+        }
+        if (x3>=x4) {
+            if (!(x4<=x&&x<=x3)) {return false;}
+        } else {
+            if (!(x3<=x&&x<=x4)) {return false;}
+        }
+        if (y3>=y4) {
+            if (!(y4<=y&&y<=y3)) {return false;}
+        } else {
+            if (!(y3<=y&&y<=y4)) {return false;}
+        }
+    }
+    return {x:x,y:y};
+}
+
 //-------------------------------------------------------------------------------------------------
 // sortvectors - Uses steering vectors as a sorting criteria for lines
 //-------------------------------------------------------------------------------------------------
@@ -315,6 +353,7 @@ function sortvectors(a,b,elementid,axis)
     // Get dx dy centered on association end e.g. invert vector if necessary
     var lineA=lines[findIndex(lines,a)];
     var lineB=lines[findIndex(lines,b)];
+    var parent=data[findIndex(data,elementid)];
 
     // Retrieve opposite element
     if(lineA.fromID==elementid){
@@ -328,11 +367,16 @@ function sortvectors(a,b,elementid,axis)
         toElementB=data[findIndex(data,lineB.fromID)];
     }
 
-    if(axis==0){
-        return toElementA.cx-toElementB.cx;
-    }else{
-        return toElementA.cy-toElementB.cy;
-    }
+    dxA=toElementA.cx-parent.cx;
+    dyA=toElementA.cy-parent.cy;
+    dxB=toElementB.cx-parent.cx;
+    dyB=toElementB.cy-parent.cy;
+
+    if(axis==0) return (Math.atan(dyB/dxB)-Math.atan(dyA/dxA))
+    else return 0;
+    
+    // (Math.atan(dyA/dxA)-Math.atan(dyB/dxB))
+
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -415,11 +459,15 @@ function redrawArrows()
       var element=data[i];
 
       // Only sort if size of list is >= 2
-      if(element.top.length>1) element.top.sort(function(a, b){return sortvectors(a,b,element.id,0)});
+      if(element.top.length>1) element.top.sort(function(a, b){return sortvectors(b,a,element.id,0)});
       if(element.bottom.length>1) element.bottom.sort(function(a, b){return sortvectors(a,b,element.id,0)});
       if(element.left.length>1) element.left.sort(function(a, b){return sortvectors(a,b,element.id,1)});
       if(element.right.length>1) element.right.sort(function(a, b){return sortvectors(a,b,element.id,1)});
       
+      for(var j=0;j<element.left.length;j++){
+          var val=element.left[j];
+          //console.log(j,lines[findIndex(lines,val)]);
+      }
     }    
 
     // Draw each line using sorted line ends when applicable
