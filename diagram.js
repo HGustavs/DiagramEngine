@@ -316,12 +316,19 @@ function showdata() {
             str+=`<polygon points="${linew},${hboxh} ${hboxw},${linew} ${boxw-linew},${hboxh} ${hboxw},${boxh-linew}"  
                    stroke-width='${linew}' stroke='black' fill='pink'/>
                    ${weak}
-                   <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
+                   <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle' clip-path='url(#clip${element.id})'> ${element.name}</text> 
                    `;
 
+                   defs+=`
+                   <clipPath id='clip${element.id}'>
+                   <polygon points="${linew*multioffs*1.5},${hboxh} ${hboxw},${linew*multioffs*1.5} ${boxw-(linew*multioffs*1.5)},${hboxh} ${hboxw},${boxh-(linew*multioffs*1.5)}" />
+                   </clipPath>
+               `;
+
         }
-				str+="</svg>"
-				str+="</div>";
+				str+="<defs>"+defs+"</defs></svg>";
+        if(defs!="") alert(str);
+        str+="</div>";
 
 		}
 
