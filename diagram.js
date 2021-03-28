@@ -1,13 +1,11 @@
-var service =[];
-var auto_update=null;
-var uidArr=[];
-
-var str="";
-var defs="";
-
 //------------------------------------=======############==========----------------------------------------
 //                           Defaults, mouse variables and zoom variables  
 //------------------------------------=======############==========----------------------------------------
+
+// Data and html building variables
+var service =[];
+var str="";
+var defs="";
 
 // Interaction variables - unknown if all are needed
 var mb,startX,startY;
@@ -76,7 +74,7 @@ var defaults={
 // Demo data - read / write from service later on
 var data=[
     {name:"Person",x:100,y:100,width:200,height:50,kind:"EREntity",id:PersonID},
-    {name:"Loan",x:140,y:250,width:200,height:50,kind:"EREntity",id:LoanID},    
+    {name:"Loan",x:140,y:250,width:200,height:50,kind:"EREntity",id:LoanID, isWeak:true},    
     {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:CarID},	
     {name:"Owns",x:420,y:60,width:60,height:60,kind:"ERRelation",id:HasID},
     {name:"Refer",x:460,y:260,width:60,height:60,kind:"ERRelation",id:RefID,isWeak:true},
