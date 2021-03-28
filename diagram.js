@@ -9,11 +9,11 @@ var defs="";
 //                           Defaults, mouse variables and zoom variables  
 //------------------------------------=======############==========----------------------------------------
 
+// Interaction variables - unknown if all are needed
 var mb,startX,startY;
 var startTop,startLeft;
 var sscrollx,sscrolly;
 var cwidth,cheight;
-var colors = ["white","Gold","pink","yellow","CornflowerBlue"];
 var hasRecursion=false;
 
 // Zoom variables
@@ -22,10 +22,14 @@ var scrollx=100;
 var scrolly=100;
 
 // Constants
-var elementwidth=200;
-var elementheight=50;
-var textheight=18;
-var strokewidth=1.5;
+const elementwidth=200;
+const elementheight=50;
+const textheight=18;
+const strokewidth=1.5;
+const baseline=10;
+const avgcharwidth=6;
+const colors = ["white","Gold","pink","yellow","CornflowerBlue"];
+const multioffs=3;
 
 // Arrow drawing stuff - diagram elements and diagram lines
 var lines=[];
@@ -70,8 +74,8 @@ var data=[
     {name:"Person",x:100,y:100,width:200,height:50,kind:"EREntity",id:PersonID},
     {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:CarID},	
     {name:"Has",x:420,y:60,width:60,height:60,kind:"ERRelation",id:HasID},
-    {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID},
-    {name:"Name",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID},
+    {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID,isComputed:true},
+    {name:"Name",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID,isMultiple:true},
     {name:"Size",x:320,y:420,width:90,height:45,kind:"ERAttr",id:SizeID},
 ];
 
@@ -265,12 +269,29 @@ function showdata() {
                    `;
             
 				}else if(element.kind=="ERAttr"){
+            var dash="";
+            if(element.isComputed == true){
+                dash="stroke-dasharray='4 4'";
+            }
+            var multi="";
+            if(element.isMultiple == true){
+                multi=`
+                    <path d="M${linew*multioffs},${hboxh} 
+                    Q${linew*multioffs},${linew*multioffs} ${hboxw},${linew*multioffs} 
+                    Q${boxw-(linew*multioffs)},${linew*multioffs} ${boxw-(linew*multioffs)},${hboxh} 
+                    Q${boxw-(linew*multioffs)},${boxh-(linew*multioffs)} ${hboxw},${boxh-(linew*multioffs)} 
+                    Q${linew*multioffs},${boxh-(linew*multioffs)} ${linew*multioffs},${hboxh}" 
+                    stroke='black' fill='pink' />`;
+            }
 						str+=`<path d="M${linew},${hboxh} 
                            Q${linew},${linew} ${hboxw},${linew} 
                            Q${boxw-linew},${linew} ${boxw-linew},${hboxh} 
                            Q${boxw-linew},${boxh-linew} ${hboxw},${boxh-linew} 
                            Q${linew},${boxh-linew} ${linew},${hboxh}" 
-                    stroke='black' fill='pink' stroke-dasharray='4 4' />
+                    stroke='black' fill='pink' ${dash} />
+                    
+                    ${multi}
+
                     <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
                     `;
 				}else if(element.kind=="ERRelation"){
@@ -480,7 +501,6 @@ function redrawArrows()
           if(felem.kind=="EREntity") felem.bottom.push(currentline.id);
           if(telem.kind=="EREntity") telem.top.push(currentline.id);
         }
-    
     }
 
     // Sort all association ends that number above 0 according to direction of line
@@ -511,17 +531,21 @@ function redrawArrows()
         // Collect coordinates
         if(currentline.ctype=="BT"){
             fy=felem.y2;
-            fx=felem.x1+(((felem.x2-felem.x1)/(felem.bottom.length+1))*(felem.bottom.indexOf(currentline.id)+1));
-        }else if(currentline.ctype=="TB"){
+            if(felem.kind=="EREntity") fx=felem.x1+(((felem.x2-felem.x1)/(felem.bottom.length+1))*(felem.bottom.indexOf(currentline.id)+1));
+            ty=telem.y1;
+          }else if(currentline.ctype=="TB"){
             fy=felem.y1;
-            fx=felem.x1+(((felem.x2-felem.x1)/(felem.top.length+1))*(felem.top.indexOf(currentline.id)+1));
+            if(felem.kind=="EREntity") fx=felem.x1+(((felem.x2-felem.x1)/(felem.top.length+1))*(felem.top.indexOf(currentline.id)+1));
+            ty=telem.y2;
         }else if(currentline.ctype=="RL"){
             fx=felem.x2;
-            fy=felem.y1+(((felem.y2-felem.y1)/(felem.right.length+1))*(felem.right.indexOf(currentline.id)+1));
+            if(felem.kind=="EREntity") fy=felem.y1+(((felem.y2-felem.y1)/(felem.right.length+1))*(felem.right.indexOf(currentline.id)+1));
+            tx=telem.x1;
         }else if(currentline.ctype=="LR"){
             fx=felem.x1;
-            fy=felem.y1+(((felem.y2-felem.y1)/(felem.left.length+1))*(felem.left.indexOf(currentline.id)+1));
-        }
+            if(felem.kind=="EREntity") fy=felem.y1+(((felem.y2-felem.y1)/(felem.left.length+1))*(felem.left.indexOf(currentline.id)+1));
+            tx=telem.x2;
+          }
 
         if(currentline.kind=="Normal"){
             str+=`<line x1='${fx}' y1='${fy}' x2='${tx}' y2='${ty}' stroke='#f44' stroke-width='${strokewidth}' />`;
