@@ -61,6 +61,10 @@ var NameID=makeRandomID();
 var SizeID=makeRandomID();
 var HasID=makeRandomID();
 var CarID=makeRandomID();
+var FNID=makeRandomID();
+var LNID=makeRandomID();
+var LoanID=makeRandomID();
+var RefID=makeRandomID();
 
 // Save default to model - updating defaults sets property to all of model
 var defaults={
@@ -72,20 +76,29 @@ var defaults={
 // Demo data - read / write from service later on
 var data=[
     {name:"Person",x:100,y:100,width:200,height:50,kind:"EREntity",id:PersonID},
+    {name:"Loan",x:140,y:250,width:200,height:50,kind:"EREntity",id:LoanID},    
     {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:CarID},	
-    {name:"Has",x:420,y:60,width:60,height:60,kind:"ERRelation",id:HasID},
+    {name:"Owns",x:420,y:60,width:60,height:60,kind:"ERRelation",id:HasID},
+    {name:"Refer",x:460,y:260,width:60,height:60,kind:"ERRelation",id:RefID,isWeak:true},
     {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID,isComputed:true},
-    {name:"Name",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID,isMultiple:true},
-    {name:"Size",x:320,y:420,width:90,height:45,kind:"ERAttr",id:SizeID},
+    {name:"Name",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID},
+    {name:"Size",x:560,y:40,width:90,height:45,kind:"ERAttr",id:SizeID,isMultiple:true},
+    {name:"F Name",x:120,y:-20,width:90,height:45,kind:"ERAttr",id:FNID},
+    {name:"L Name",x:230,y:-20,width:90,height:45,kind:"ERAttr",id:LNID}
 ];
 
 var lines=[
     {id:makeRandomID(),fromID:PersonID,toID:IDID,kind:"Normal"},
     {id:makeRandomID(),fromID:PersonID,toID:NameID,kind:"Normal"},
-    {id:makeRandomID(),fromID:PersonID,toID:SizeID,kind:"Normal"},
+    {id:makeRandomID(),fromID:CarID,toID:SizeID,kind:"Normal"},
 
-   {id:makeRandomID(),fromID:PersonID,toID:HasID,kind:"Normal"},
-   {id:makeRandomID(),fromID:HasID,toID:CarID,kind:"Double"}        
+    {id:makeRandomID(),fromID:PersonID,toID:HasID,kind:"Normal"},
+    {id:makeRandomID(),fromID:HasID,toID:CarID,kind:"Double"},    
+    {id:makeRandomID(),fromID:NameID,toID:FNID,kind:"Normal"},
+    {id:makeRandomID(),fromID:NameID,toID:LNID,kind:"Normal"},
+    
+    {id:makeRandomID(),fromID:LoanID,toID:RefID,kind:"Normal"},
+    {id:makeRandomID(),fromID:CarID,toID:RefID,kind:"Normal"},
 ];
 
 //------------------------------------=======############==========----------------------------------------
@@ -281,22 +294,32 @@ function showdata() {
                     Q${boxw-(linew*multioffs)},${linew*multioffs} ${boxw-(linew*multioffs)},${hboxh} 
                     Q${boxw-(linew*multioffs)},${boxh-(linew*multioffs)} ${hboxw},${boxh-(linew*multioffs)} 
                     Q${linew*multioffs},${boxh-(linew*multioffs)} ${linew*multioffs},${hboxh}" 
-                    stroke='black' fill='pink' />`;
+                    stroke='black' fill='pink' stroke-width='${linew}' />`;
             }
 						str+=`<path d="M${linew},${hboxh} 
                            Q${linew},${linew} ${hboxw},${linew} 
                            Q${boxw-linew},${linew} ${boxw-linew},${hboxh} 
                            Q${boxw-linew},${boxh-linew} ${hboxw},${boxh-linew} 
                            Q${linew},${boxh-linew} ${linew},${hboxh}" 
-                    stroke='black' fill='pink' ${dash} />
+                    stroke='black' fill='pink' ${dash} stroke-width='${linew}' />
                     
                     ${multi}
 
                     <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
                     `;
 				}else if(element.kind=="ERRelation"){
+            var weak="";
+            if(element.isWeak == true){
+                weak=`<polygon points="${linew*multioffs*1.5},${hboxh} ${hboxw},${linew*multioffs*1.5} ${boxw-(linew*multioffs*1.5)},${hboxh} ${hboxw},${boxh-(linew*multioffs*1.5)}"  
+                stroke-width='${linew}' stroke='black' fill='pink'/>
+                `;
+            }
             str+=`<polygon points="${linew},${hboxh} ${hboxw},${linew} ${boxw-linew},${hboxh} ${hboxw},${boxh-linew}"  
-                   stroke-width='${linew}' stroke='black' fill='pink'/>`;
+                   stroke-width='${linew}' stroke='black' fill='pink'/>
+                   ${weak}
+                   <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
+                   `;
+
         }
 				str+="</svg>"
 				str+="</div>";
