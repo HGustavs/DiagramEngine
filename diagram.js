@@ -26,7 +26,7 @@ const elementheight=50;
 const textheight=18;
 const strokewidth=1.5;
 const baseline=10;
-const avgcharwidth=5;
+const avgcharwidth=4;
 const colors = ["white","Gold","pink","yellow","CornflowerBlue"];
 const multioffs=3;
 
@@ -80,10 +80,10 @@ var data=[
     {name:"Owns",x:420,y:60,width:60,height:60,kind:"ERRelation",id:HasID},
     {name:"Refer",x:460,y:260,width:60,height:60,kind:"ERRelation",id:RefID,isWeak:true},
     {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID,isComputed:true},
-    {name:"Name",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID},
+    {name:"yyyyyy",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID,isKey:true},
     {name:"Size",x:560,y:40,width:90,height:45,kind:"ERAttr",id:SizeID,isMultiple:true},
-    {name:"F Name",x:120,y:-20,width:90,height:45,kind:"ERAttr",id:FNID},
-    {name:"L Name",x:230,y:-20,width:90,height:45,kind:"ERAttr",id:LNID}
+    {name:"zzzzzz",x:120,y:-20,width:90,height:45,kind:"ERAttr",id:FNID,isKey:true},
+    {name:"xxxxxx",x:230,y:-20,width:90,height:45,kind:"ERAttr",id:LNID,isKey:true}
 ];
 
 var lines=[
@@ -241,6 +241,11 @@ function textWidth(txt)
     var len=txt.length*avgcharwidth;
 
     // We remove some width for thinner characters such as "il" and add some with for wider characters such as "w"
+    for(var i=0;i<txt.length;i++){
+        if(txt.charAt(i)=='f'||txt.charAt(i)=='i'||txt.charAt(i)=='j'||txt.charAt(i)=='l'||txt.charAt(i)=='t') len-=(avgcharwidth*0.5);
+        if(txt.charAt(i)=='r') len-=(avgcharwidth*0.4);
+        if(txt.charAt(i)=='m'||txt.charAt(i)=='w') len+=(avgcharwidth*0.5);        
+    }
 
     return len;
 }
@@ -289,8 +294,6 @@ function showdata() {
 				str+=`<svg width='${boxw}' height='${boxh}' >`;
 				if(element.kind=="EREntity"){
               var weak="";
-              var length=textWidth(element.name)*zoomfact;
-              var key=`<line x1='${hboxw-length}' y1='${hboxh+(textheight*0.5)}' x2='${hboxw+length}' y2='${hboxh+(textheight*0.5)}' stroke='#000' stroke-width='${linew}' />`;
               
               if(element.isWeak==true) weak=`<rect x='${linew*multioffs}' y='${linew*multioffs}' width='${boxw-(linew*2*multioffs)}' height='${boxh-(linew*2*multioffs)}' 
               stroke-width='${linew}' stroke='black' fill='pink' />`;
@@ -299,9 +302,15 @@ function showdata() {
                    stroke-width='${linew}' stroke='black' fill='pink' />
                    ${weak}
                    <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text>
-                   ${key} 
                    `;
 				}else if(element.kind=="ERAttr"){
+
+            var key="";
+            if(element.isKey){
+                var length=textWidth(element.name)*zoomfact;
+                key=`<line x1='${hboxw-length}' y1='${hboxh+(textheight*0.5)}' x2='${hboxw+length}' y2='${hboxh+(textheight*0.5)}' stroke='#000' stroke-width='${linew}' />`;
+            }
+
             var dash="";
             if(element.isComputed == true){
                 dash="stroke-dasharray='4 4'";
@@ -322,10 +331,9 @@ function showdata() {
                            Q${boxw-linew},${boxh-linew} ${hboxw},${boxh-linew} 
                            Q${linew},${boxh-linew} ${linew},${hboxh}" 
                     stroke='black' fill='pink' ${dash} stroke-width='${linew}' />
-                    
                     ${multi}
-
                     <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
+                    ${key}                    
                     `;
 				}else if(element.kind=="ERRelation"){
             var weak="";
