@@ -26,7 +26,7 @@ const elementheight=50;
 const textheight=18;
 const strokewidth=1.5;
 const baseline=10;
-const avgcharwidth=6;
+const avgcharwidth=5;
 const colors = ["white","Gold","pink","yellow","CornflowerBlue"];
 const multioffs=3;
 
@@ -96,7 +96,7 @@ var lines=[
     {id:makeRandomID(),fromID:NameID,toID:FNID,kind:"Normal"},
     {id:makeRandomID(),fromID:NameID,toID:LNID,kind:"Normal"},
     
-    {id:makeRandomID(),fromID:LoanID,toID:RefID,kind:"Normal"},
+    {id:makeRandomID(),fromID:LoanID,toID:RefID,kind:"Double"},
     {id:makeRandomID(),fromID:CarID,toID:RefID,kind:"Normal"},
 ];
 
@@ -233,6 +233,19 @@ function findIndex(arr,id)
 }
 
 //-------------------------------------------------------------------------------------------------
+// textWidth - Returns an estimation of text width based on constant
+//-------------------------------------------------------------------------------------------------
+
+function textWidth(txt)
+{
+    var len=txt.length*avgcharwidth;
+
+    // We remove some width for thinner characters such as "il" and add some with for wider characters such as "w"
+
+    return len;
+}
+
+//-------------------------------------------------------------------------------------------------
 // Showdata iterates over all diagram elements
 //-------------------------------------------------------------------------------------------------
 
@@ -275,11 +288,19 @@ function showdata() {
 				'>`;
 				str+=`<svg width='${boxw}' height='${boxh}' >`;
 				if(element.kind=="EREntity"){
-						str+=`<rect x='${linew}' y='${linew}' width='${boxw-(linew*2)}' height='${boxh-(linew*2)}' 
+              var weak="";
+              var length=textWidth(element.name)*zoomfact;
+              var key=`<line x1='${hboxw-length}' y1='${hboxh+(textheight*0.5)}' x2='${hboxw+length}' y2='${hboxh+(textheight*0.5)}' stroke='#000' stroke-width='${linew}' />`;
+              
+              if(element.isWeak==true) weak=`<rect x='${linew*multioffs}' y='${linew*multioffs}' width='${boxw-(linew*2*multioffs)}' height='${boxh-(linew*2*multioffs)}' 
+              stroke-width='${linew}' stroke='black' fill='pink' />`;
+
+              str+=`<rect x='${linew}' y='${linew}' width='${boxw-(linew*2)}' height='${boxh-(linew*2)}' 
                    stroke-width='${linew}' stroke='black' fill='pink' />
-                   <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text> 
+                   ${weak}
+                   <text x='${hboxw}' y='${hboxh}' dominant-baseline='middle' text-anchor='middle'>${element.name}</text>
+                   ${key} 
                    `;
-            
 				}else if(element.kind=="ERAttr"){
             var dash="";
             if(element.isComputed == true){
@@ -327,7 +348,6 @@ function showdata() {
 
         }
 				str+="<defs>"+defs+"</defs></svg>";
-        if(defs!="") alert(str);
         str+="</div>";
 
 		}
