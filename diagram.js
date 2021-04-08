@@ -66,11 +66,11 @@ var LoanID=makeRandomID();
 var RefID=makeRandomID();
 
 // Save default to model - updating defaults sets property to all of model
-var defaults={
-    defaultERtentity:{kind:"EREntity",fill:"White",Stroke:"Black",width:200,height:50},
-    defaultERrelation:{kind:"ERRelation",fill:"White",Stroke:"Black",width:60,height:60},
-    defaultERattr:{kind:"ERAttr",fill:"White",Stroke:"Black",width:90,height:45}
-}
+var defaults=[
+      {kind:"EREntity",name:"text",fill:"White",Stroke:"Black",width:200,height:50},
+      {kind:"ERRelation",name:"text",fill:"White",stroke:"Black",width:60,height:60},
+      {kind:"ERAttr",name:"text",fill:"White",stroke:"Black",width:90,height:45,isMultiple:false,isKey:false,isComputed:false}
+    ];
 
 // Demo data - read / write from service later on
 var data=[
@@ -377,11 +377,72 @@ function updateSelection(ctxelement,x,y)
 		if(ctxelement!=null){
 				// if we pass a context object e.g. we clicked in object
 				context.push(ctxelement);
+
+        // Find default as guide for default properties
+        var def=null;
+        for(var i=0;i<defaults.length;i++){
+            if(ctxelement.kind==defaults[i].kind){
+                def=defaults[i];
+            }
+        }
+
+        // Build inputs
+        var str="";
+        if(def!=null){
+            for (const property in def) {
+                val=ctxelement[property];
+                if(def[property]=="text"){
+
+                }else if(val==false||val==null){
+                    val="";
+                }else{
+                    val="checked='checked'";
+                }
+                if(def[property]=="text"){
+                  str+=`<div>
+                  <label for='${property}'>${property}</label>
+                  <input class='prop' type='text' id='${property}' value='${val}' >
+              </div>`;
+                }else if(def[property]==false||def[property]==true){  
+                  str+=`<div>
+                      <input class='prop' type='checkbox' id='${property}' ${val}>
+                      <label for='${property}'>${property}</label>
+                  </div>`;
+                }
+            }
+            str+="<button onclick='saveproperties();'>Save!</button>";
+        }else{
+          if(context.length>1){
+            str="<div>No object selected</div>";
+          }else{
+            str="<div>Multiple objects selected</div>";
+          }
+        }
+        document.getElementById('propbox').innerHTML=str;
+        // Build save button
 		}else if(typeof x != "undefined" && typeof y != "undefined"){
 				// Or if x and y are both defined
 		}
 }
 
+function saveproperties()
+{
+    var properties=document.getElementsByClassName('prop');
+    for(var i=0;i<properties.length;i++){
+        var prop=properties[i];
+        if(prop.type=='checkbox'){
+            if(prop.checked){
+                context[0][prop.id]=true;
+            }else{
+                context[0][prop.id]=false;
+            
+            }
+        }else if(prop.type='text'){
+          context[0][prop.id]=prop.value;
+        }
+    }
+    showdata();
+}
 
 //-------------------------------------------------------------------------------------------------
 // updatepos - Update positions of all elements based on the zoom level and view space coordinate
