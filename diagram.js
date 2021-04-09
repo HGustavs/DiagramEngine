@@ -69,7 +69,7 @@ var RefID=makeRandomID();
 var defaults=[
       {kind:"EREntity",name:"text",fill:"White",Stroke:"Black",width:200,height:50},
       {kind:"ERRelation",name:"text",fill:"White",stroke:"Black",width:60,height:60},
-      {kind:"ERAttr",name:"text",fill:"White",stroke:"Black",width:90,height:45,isMultiple:false,isKey:false,isComputed:false}
+      {kind:"ERAttr",name:"text",fill:"White",stroke:"Black",width:90,height:45,state:["none","multiple","key","computed"]}
     ];
 
 // Demo data - read / write from service later on
@@ -79,11 +79,11 @@ var data=[
     {name:"Car",x:500,y:140,width:200,height:50,kind:"EREntity",id:CarID},	
     {name:"Owns",x:420,y:60,width:60,height:60,kind:"ERRelation",id:HasID},
     {name:"Refer",x:460,y:260,width:60,height:60,kind:"ERRelation",id:RefID,isWeak:true},
-    {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID,isComputed:true},
-    {name:"yyyyyy",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID,isKey:true},
-    {name:"Size",x:560,y:40,width:90,height:45,kind:"ERAttr",id:SizeID,isMultiple:true},
-    {name:"zzzzzz",x:120,y:-20,width:90,height:45,kind:"ERAttr",id:FNID,isKey:true},
-    {name:"xxxxxx",x:230,y:-20,width:90,height:45,kind:"ERAttr",id:LNID,isKey:true}
+    {name:"ID",x:30,y:30,width:90,height:40,kind:"ERAttr",id:IDID,state:"key"},
+    {name:"yyyyyy",x:170,y:50,width:90,height:45,kind:"ERAttr",id:NameID,state:"multiple"},
+    {name:"Size",x:560,y:40,width:90,height:45,kind:"ERAttr",id:SizeID,state:"computed"},
+    {name:"zzzzzz",x:120,y:-20,width:90,height:45,kind:"ERAttr",id:FNID},
+    {name:"xxxxxx",x:230,y:-20,width:90,height:45,kind:"ERAttr",id:LNID}
 ];
 
 var lines=[
@@ -305,18 +305,16 @@ function showdata() {
                    `;
 				}else if(element.kind=="ERAttr"){
 
+            // Handling of state
             var key="";
-            if(element.isKey){
+            var dash="";
+            var multi="";
+            if(element.state=="key"){
                 var length=textWidth(element.name)*zoomfact;
                 key=`<line x1='${hboxw-length}' y1='${hboxh+(textheight*0.5)}' x2='${hboxw+length}' y2='${hboxh+(textheight*0.5)}' stroke='#000' stroke-width='${linew}' />`;
-            }
-
-            var dash="";
-            if(element.isComputed == true){
+            }else if(element.state=="computed"){
                 dash="stroke-dasharray='4 4'";
-            }
-            var multi="";
-            if(element.isMultiple == true){
+            }else if(element.state == "multiple"){
                 multi=`
                     <path d="M${linew*multioffs},${hboxh} 
                     Q${linew*multioffs},${linew*multioffs} ${hboxw},${linew*multioffs} 
@@ -325,6 +323,7 @@ function showdata() {
                     Q${linew*multioffs},${boxh-(linew*multioffs)} ${linew*multioffs},${hboxh}" 
                     stroke='black' fill='pink' stroke-width='${linew}' />`;
             }
+
 						str+=`<path d="M${linew},${hboxh} 
                            Q${linew},${linew} ${hboxw},${linew} 
                            Q${boxw-linew},${linew} ${boxw-linew},${hboxh} 
@@ -391,23 +390,28 @@ function updateSelection(ctxelement,x,y)
         if(def!=null){
             for (const property in def) {
                 val=ctxelement[property];
-                if(def[property]=="text"){
 
-                }else if(val==false||val==null){
-                    val="";
-                }else{
-                    val="checked='checked'";
-                }
+                if(val===false) val=""
+                else if(val===true) val=" checked ";
+    
                 if(def[property]=="text"){
-                  str+=`<div>
-                  <label for='${property}'>${property}</label>
-                  <input class='prop' type='text' id='${property}' value='${val}' >
-              </div>`;
+                    str+=`<div>
+                    <label for='${property}'>${property}</label>
+                    <input class='prop' type='text' id='${property}' value='${val}' >
+                    </div>`;
                 }else if(def[property]==false||def[property]==true){  
-                  str+=`<div>
-                      <input class='prop' type='checkbox' id='${property}' ${val}>
-                      <label for='${property}'>${property}</label>
-                  </div>`;
+                    str+=`<div>
+                    <input class='prop' type='checkbox' id='${property}' ${val}>
+                    <label for='${property}'>${property}</label>
+                    </div>`;
+                }else if(Array.isArray(def[property])){
+                    str+=`<div><label for='${property}'>${property}</label> <select class='prop' id='${property}' >`;
+                    for(var i=0;i<def[property].length;i++){
+                        var sel="";
+                        if(def[property][i]==val) sel="selected";
+                        str+=`<option ${sel} >${def[property][i]}</option>`;
+                    }
+                    str+="</select></div>";
                 }
             }
             str+="<button onclick='saveproperties();'>Save!</button>";
@@ -430,7 +434,11 @@ function saveproperties()
     var properties=document.getElementsByClassName('prop');
     for(var i=0;i<properties.length;i++){
         var prop=properties[i];
-        if(prop.type=='checkbox'){
+
+        if(prop.tagName=="select"){
+            context[0][prop.id]=prop.value;
+        }
+        else if(prop.type=='checkbox'){
             if(prop.checked){
                 context[0][prop.id]=true;
             }else{
